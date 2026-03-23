@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamilyCare App</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#F5F5F0;min-height:100vh;color:#1a1a1a}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+.card{background:#fff;border:1px solid #E8E8E0;border-radius:12px;padding:1.25rem}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #D0D0C8;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#888;box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
+.btn{width:100%;padding:10px 16px;border:1px solid #D0D0C8;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;background:#fff;color:#1a1a1a;font-family:inherit;transition:background 0.15s}
+.btn:hover{background:#F0F0E8}
+.btn.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn.primary:hover{background:#333}
+.label{font-size:12px;color:#666;margin-bottom:5px;display:block;font-weight:500}
+.gap{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px}
+.topbar{background:#fff;border-bottom:1px solid #E8E8E0;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:500;flex:1}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:500}
+.section-title{font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.8px}
+.member-row{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E8E8E0;border-radius:10px;background:#FAFAF8}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric-card{background:#F5F5F0;border-radius:8px;padding:10px;text-align:center}
+.metric-val{font-size:18px;font-weight:500;color:#1a1a1a}
+.metric-lbl{font-size:10px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px}
+.emoji-row{display:flex;gap:8px;justify-content:space-around;margin:10px 0}
+.emoji-btn{width:52px;height:52px;border-radius:50%;border:2px solid #E8E8E0;background:#F5F5F0;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.emoji-btn:hover{border-color:#aaa;transform:scale(1.08)}
+.emoji-btn.selected{border-color:#1a1a1a;background:#fff;transform:scale(1.15);box-shadow:0 0 0 3px rgba(0,0,0,0.08)}
+.health-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #F0F0E8}
+.health-item:last-child{border-bottom:none}
+.health-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.health-label{font-size:14px;color:#1a1a1a;font-weight:500}
+.health-sub{font-size:12px;color:#888;margin-top:1px}
+.toggle-row{display:flex;gap:5px}
+.toggle-opt{flex:1;padding:7px 6px;text-align:center;border:1px solid #E0E0D8;border-radius:7px;font-size:12px;cursor:pointer;background:#F5F5F0;color:#666;transition:all 0.15s;white-space:nowrap}
+.toggle-opt:hover{border-color:#aaa}
+.toggle-opt.sel{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.code-box{background:#F5F5F0;border:1.5px dashed #C0C0B8;border-radius:10px;padding:14px 10px;text-align:center;letter-spacing:3px;font-size:18px;font-weight:600;font-family:monospace;color:#1a1a1a;word-break:break-all;line-height:1.6}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:8px;line-height:1.5}
+.alert.success{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.alert.info{background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE}
+.alert.warn{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.alert.danger{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+.scroll-area{overflow-y:auto;flex:1;padding:16px;display:flex;flex-direction:column;gap:12px}
+.tab-bar{display:flex;background:#fff;border-top:1px solid #E8E8E0}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:11px;color:#888;cursor:pointer;border-top:2px solid transparent;transition:all 0.15s;font-weight:500}
+.tab.active{color:#1a1a1a;border-top-color:#1a1a1a}
+.back-btn{width:30px;height:30px;border:1px solid #E0E0D8;border-radius:8px;background:transparent;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:#1a1a1a}
+.center-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:28px 20px;max-width:440px;margin:0 auto;width:100%;gap:14px}
+.big-title{font-size:26px;font-weight:600;color:#1a1a1a;text-align:center}
+.sub-text{font-size:14px;color:#666;text-align:center;line-height:1.65}
+.divider{display:flex;align-items:center;gap:10px;color:#AAA;font-size:12px;width:100%}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#E8E8E0}
+.num-input-wrap{display:flex;gap:6px;align-items:center}
+.num-unit{font-size:12px;color:#888;white-space:nowrap}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:5px 12px;font-size:12px;border:1px solid #E0E0D8;border-radius:999px;cursor:pointer;background:#F5F5F0;color:#666;transition:all 0.15s;flex:none}
+.chip.sel{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.vital-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F0E8}
+.vital-row:last-child{border-bottom:none}
+.copy-btn{background:#1a1a1a;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:background 0.15s}
+.copy-btn:hover{background:#333}
+.how-box{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:14px;font-size:13px;color:#78350F;line-height:1.7}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="screen active" id="s-landing">
+  <div class="center-wrap">
+    <div style="font-size:52px">🏠</div>
+    <div class="big-title">FamilyCare</div>
+    <p class="sub-text">Track your family's daily health and emotions — privately, together.</p>
+    <div class="gap" style="width:100%">
+      <button class="btn primary" onclick="show('s-login')">Sign in</button>
+      <button class="btn" onclick="show('s-register')">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="s-login">
+  <div class="topbar">
+    <button class="back-btn" onclick="show('s-landing')">←</button>
+    <span class="topbar-title">Sign in</span>
+  </div>
+  <div class="center-wrap">
+    <div class="card" style="width:100%">
+      <div class="gap">
+        <div><span class="label">Your name</span><input type="text" id="login-name" placeholder="Enter your name"/></div>
+        <div><span class="label">Password</span><input type="password" id="login-pass" placeholder="••••••••"/></div>
+        <div id="login-err" class="alert danger" style="display:none"></div>
+        <button class="btn primary" onclick="doLogin()">Sign in →</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#888">No account? <span style="color:#1a1a1a;cursor:pointer;font-weight:600;text-decoration:underline" onclick="show('s-register')">Create one</span></p>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="screen" id="s-register">
+  <div class="topbar">
+    <button class="back-btn" onclick="show('s-landing')">←</button>
+    <span class="topbar-title">Create account</span>
+  </div>
+  <div class="center-wrap">
+    <div class="card" style="width:100%">
+      <div class="gap">
+        <div><span class="label">Your name</span><input type="text" id="reg-name" placeholder="Full name"/></div>
+        <div><span class="label">Password</span><input type="password" id="reg-pass" placeholder="Choose a password"/></div>
+        <div>
+          <span class="label">Your role</span>
+          <select id="reg-role" onchange="toggleCodeField()">
+            <option value="admin">Create a new family (I am the admin)</option>
+            <option value="member">Join existing family (I have an invite code)</option>
+          </select>
+        </div>
+        <div id="reg-code-wrap" style="display:none">
+          <span class="label">Paste the invite code from your family admin</span>
+          <textarea id="reg-code" placeholder="Paste the full invite code here…" style="height:80px;resize:none;font-size:12px;font-family:monospace"></textarea>
+        </div>
+        <div id="reg-err" class="alert danger" style="display:none"></div>
+        <button class="btn primary" onclick="doRegister()">Create account →</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#888">Already have an account? <span style="color:#1a1a1a;cursor:pointer;font-weight:600;text-decoration:underline" onclick="show('s-login')">Sign in</span></p>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="s-home">
+  <div class="topbar">
+    <div id="home-av" class="avatar" style="background:#EEF2FF;color:#3730A3">P</div>
+    <span class="topbar-title" id="home-greeting">Hello!</span>
+    <button class="btn" style="width:auto;padding:6px 14px;font-size:12px" onclick="switchTab('family')">👨‍👩‍👦 Family</button>
+  </div>
+  <div class="scroll-area" id="home-scroll"></div>
+  <div class="tab-bar">
+    <div class="tab active" id="tab-home" onclick="switchTab('home')">🏠 Home</div>
+    <div class="tab" id="tab-checkin" onclick="switchTab('checkin')">✅ Check-in</div>
+    <div class="tab" id="tab-family" onclick="switchTab('family')">👨‍👩‍👦 Family</div>
+    <div class="tab" id="tab-reports" onclick="switchTab('reports')">📊 Reports</div>
+  </div>
+</div>
+
+<!-- CHECK-IN -->
+<div class="screen" id="s-checkin">
+  <div class="topbar">
+    <button class="back-btn" onclick="show('s-home')">←</button>
+    <span class="topbar-title">Daily check-in</span>
+    <button class="btn primary" style="width:auto;padding:6px 16px;font-size:13px" onclick="submitCheckin()">Submit ✓</button>
+  </div>
+  <div class="scroll-area">
+    <div class="card">
+      <div class="section-title">How are you feeling today?</div>
+      <div class="emoji-row" id="mood-emojis">
+        <button class="emoji-btn" data-val="1" onclick="selectMood(this)">😢</button>
+        <button class="emoji-btn" data-val="2" onclick="selectMood(this)">😔</button>
+        <button class="emoji-btn" data-val="3" onclick="selectMood(this)">😐</button>
+        <button class="emoji-btn" data-val="4" onclick="selectMood(this)">🙂</button>
+        <button class="emoji-btn" data-val="5" onclick="selectMood(this)">😄</button>
+      </div>
+      <div style="text-align:center;font-size:13px;color:#888" id="mood-label">Tap an emoji</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Physical health</div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#FEF2F2">🤒</div>
+        <div style="flex:1"><div class="health-label">Are you feeling sick?</div></div>
+        <div class="toggle-row" id="sick-toggle">
+          <div class="toggle-opt sel" data-val="no" onclick="toggle(this,'sick-toggle')">No</div>
+          <div class="toggle-opt" data-val="yes" onclick="toggle(this,'sick-toggle')">Yes</div>
+        </div>
+      </div>
+      <div id="symptoms-row" style="display:none;padding-top:10px">
+        <span class="label">Select symptoms</span>
+        <div class="chip-wrap" id="symptom-chips">
+          <div class="chip" onclick="this.classList.toggle('sel')">🌡 Fever</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">🤕 Headache</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">😤 Cough</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">😴 Fatigue</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">🤢 Nausea</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">💪 Body pain</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">😵 Dizziness</div>
+          <div class="chip" onclick="this.classList.toggle('sel')">👃 Cold</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Exercise & activity</div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#F0FDF4">🏃</div>
+        <div style="flex:1"><div class="health-label">Did you exercise today?</div></div>
+        <div class="toggle-row" id="ex-toggle">
+          <div class="toggle-opt sel" data-val="no" onclick="toggle(this,'ex-toggle')">No</div>
+          <div class="toggle-opt" data-val="yes" onclick="toggle(this,'ex-toggle')">Yes</div>
+        </div>
+      </div>
+      <div id="ex-detail" style="display:none;padding-top:10px">
+        <span class="label">Activity type</span>
+        <div class="chip-wrap" id="ex-chips">
+          <div class="chip" onclick="selectEx(this)">🚶 Walking</div>
+          <div class="chip" onclick="selectEx(this)">🏃 Running</div>
+          <div class="chip" onclick="selectEx(this)">🧘 Yoga</div>
+          <div class="chip" onclick="selectEx(this)">🚴 Cycling</div>
+          <div class="chip" onclick="selectEx(this)">🏋️ Gym</div>
+          <div class="chip" onclick="selectEx(this)">🏊 Swimming</div>
+        </div>
+        <div class="row" style="margin-top:10px;align-items:flex-end">
+          <div style="flex:1"><span class="label">Duration (minutes)</span>
+            <div class="num-input-wrap"><input type="number" id="ex-mins" placeholder="30" min="1" max="300" style="width:80px"/></div>
+          </div>
+          <div style="flex:1"><span class="label">Steps (optional)</span>
+            <input type="number" id="ex-steps" placeholder="5000" min="0"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Vitals</div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#FEF2F2">🩸</div>
+        <div style="flex:1"><div class="health-label">Blood sugar</div><div class="health-sub">mg/dL (fasting &lt;100, random &lt;140)</div></div>
+        <div class="num-input-wrap"><input type="number" id="v-sugar" placeholder="95" style="width:72px"/><span class="num-unit">mg/dL</span></div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#FFFBEB">🫀</div>
+        <div style="flex:1"><div class="health-label">Blood pressure</div><div class="health-sub">Normal below 120/80 mmHg</div></div>
+        <div class="num-input-wrap">
+          <input type="number" id="v-bps" placeholder="120" style="width:58px"/>
+          <span class="num-unit">/</span>
+          <input type="number" id="v-bpd" placeholder="80" style="width:58px"/>
+          <span class="num-unit">mmHg</span>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#EFF6FF">🧪</div>
+        <div style="flex:1"><div class="health-label">Cholesterol</div><div class="health-sub">Desirable below 200 mg/dL</div></div>
+        <div class="num-input-wrap"><input type="number" id="v-chol" placeholder="180" style="width:72px"/><span class="num-unit">mg/dL</span></div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#F5F5F0">⚖️</div>
+        <div style="flex:1"><div class="health-label">Weight (optional)</div></div>
+        <div class="num-input-wrap"><input type="number" id="v-weight" placeholder="65" style="width:72px"/><span class="num-unit">kg</span></div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#F0FDF4">❤️</div>
+        <div style="flex:1"><div class="health-label">Heart rate</div><div class="health-sub">Normal resting: 60–100 bpm</div></div>
+        <div class="num-input-wrap"><input type="number" id="v-hr" placeholder="72" style="width:72px"/><span class="num-unit">bpm</span></div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#F0FDF4">🩺</div>
+        <div style="flex:1"><div class="health-label">Oxygen level (SpO2)</div><div class="health-sub">Normal: 95–100%</div></div>
+        <div class="num-input-wrap"><input type="number" id="v-spo2" placeholder="98" style="width:72px"/><span class="num-unit">%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Daily habits</div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#EFF6FF">💊</div>
+        <div style="flex:1"><div class="health-label">Medicines taken?</div></div>
+        <div class="toggle-row" id="med-toggle">
+          <div class="toggle-opt sel" data-val="no" onclick="toggle(this,'med-toggle')">No</div>
+          <div class="toggle-opt" data-val="yes" onclick="toggle(this,'med-toggle')">Yes</div>
+          <div class="toggle-opt" data-val="na" onclick="toggle(this,'med-toggle')">N/A</div>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#EFF6FF">💧</div>
+        <div style="flex:1"><div class="health-label">Water intake</div></div>
+        <div class="toggle-row" id="water-toggle">
+          <div class="toggle-opt" data-val="low" onclick="toggle(this,'water-toggle')">Low</div>
+          <div class="toggle-opt sel" data-val="ok" onclick="toggle(this,'water-toggle')">OK</div>
+          <div class="toggle-opt" data-val="good" onclick="toggle(this,'water-toggle')">Good</div>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#F5F5F0">😴</div>
+        <div style="flex:1"><div class="health-label">Sleep quality</div></div>
+        <div class="toggle-row" id="sleep-toggle">
+          <div class="toggle-opt" data-val="poor" onclick="toggle(this,'sleep-toggle')">Poor</div>
+          <div class="toggle-opt sel" data-val="ok" onclick="toggle(this,'sleep-toggle')">OK</div>
+          <div class="toggle-opt" data-val="good" onclick="toggle(this,'sleep-toggle')">Good</div>
+        </div>
+      </div>
+      <div class="health-item">
+        <div class="health-icon" style="background:#FFFBEB">🍽️</div>
+        <div style="flex:1"><div class="health-label">Diet today</div></div>
+        <div class="toggle-row" id="diet-toggle">
+          <div class="toggle-opt" data-val="poor" onclick="toggle(this,'diet-toggle')">Poor</div>
+          <div class="toggle-opt sel" data-val="ok" onclick="toggle(this,'diet-toggle')">OK</div>
+          <div class="toggle-opt" data-val="good" onclick="toggle(this,'diet-toggle')">Good</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Note for family (optional)</div>
+      <textarea id="checkin-note" placeholder="e.g. Feeling a little tired today…" style="height:72px;resize:none"></textarea>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+</div>
+
+<!-- FAMILY PANEL -->
+<div class="screen" id="s-family">
+  <div class="topbar">
+    <button class="back-btn" onclick="show('s-home')">←</button>
+    <span class="topbar-title" id="fam-title">My Family</span>
+  </div>
+  <div class="scroll-area" id="fam-scroll"></div>
+</div>
+
+<!-- CHECK-IN SUCCESS -->
+<div class="screen" id="s-done">
+  <div class="center-wrap">
+    <div style="font-size:56px">✅</div>
+    <div class="big-title">Check-in done!</div>
+    <p class="sub-text" id="done-msg">Your family can see your update for today.</p>
+    <div id="health-alerts" style="width:100%"></div>
+    <button class="btn primary" style="width:100%" onclick="switchTab('home')">Back to home</button>
+  </div>
+</div>
+
+<!-- MEMBER DETAIL -->
+<div class="screen" id="s-member">
+  <div class="topbar">
+    <button class="back-btn" onclick="show('s-family');renderFamily()">←</button>
+    <span class="topbar-title" id="mem-name">Member</span>
+  </div>
+  <div class="scroll-area" id="mem-scroll"></div>
+</div>
+
+<script>
+// ── STORAGE HELPERS ──
+// All data lives in localStorage so it persists on this device.
+// The invite code is a base64-encoded JSON blob containing the family
+// snapshot so the recipient device can bootstrap the family record.
+
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem('fc_'+k)) } catch(e){ return null } },
+  set: (k,v) => localStorage.setItem('fc_'+k, JSON.stringify(v)),
+  del: k => localStorage.removeItem('fc_'+k)
+};
+
+function loadDB(){
+  return {
+    users:    LS.get('users')    || {},
+    families: LS.get('families') || {},
+    checkins: LS.get('checkins') || {}
+  };
+}
+function saveDB(db){
+  LS.set('users',    db.users);
+  LS.set('families', db.families);
+  LS.set('checkins', db.checkins);
+}
+
+// ── INVITE CODE ──
+// Format: base64( JSON { familyId, familyName, adminName } )
+// The joining device creates/updates the family record locally from this payload.
+function makeInviteCode(familyId, familyName, adminName){
+  const payload = { familyId, familyName, adminName, v:1 };
+  return btoa(JSON.stringify(payload));
+}
+function parseInviteCode(raw){
+  try {
+    const str = raw.replace(/\s/g,'');
+    const obj = JSON.parse(atob(str));
+    if(obj.v===1 && obj.familyId && obj.familyName) return obj;
+  } catch(e){}
+  return null;
+}
+
+// ── SYNC CODE ──
+// When an admin shares data, they also generate a "sync blob" that members
+// can import so they see each other's check-ins.
+function makeSyncBlob(db, familyId){
+  const fam = db.families[familyId];
+  if(!fam) return null;
+  const checkinSlice = {};
+  fam.members.forEach(m => { if(db.checkins[m]) checkinSlice[m] = db.checkins[m]; });
+  const blob = { familyId, family: fam, checkins: checkinSlice, ts: Date.now(), v:2 };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(blob))));
+}
+function importSyncBlob(raw, db){
+  try {
+    const str = raw.replace(/\s/g,'');
+    const blob = JSON.parse(decodeURIComponent(escape(atob(str))));
+    if(blob.v!==2) return 'Old format — ask your admin to share again.';
+    // Merge family record
+    db.families[blob.familyId] = blob.family;
+    // Merge check-ins (don't overwrite own)
+    Object.keys(blob.checkins).forEach(m => {
+      if(m !== CU) db.checkins[m] = blob.checkins[m];
+    });
+    saveDB(db);
+    return null; // no error
+  } catch(e){ return 'Invalid sync code. Make sure you copied it fully.'; }
+}
+
+// ── STATE ──
+let CU = null;
+let CI = { mood:null, sick:'no', exercise:'no', meds:'no', water:'ok', sleep:'ok', diet:'ok' };
+
+// ── NAV ──
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('active'));
+  const el = document.getElementById('tab-'+t);
+  if(el) el.classList.add('active');
+  if(t==='checkin'){ show('s-checkin'); resetCheckin(); }
+  else if(t==='family'){ show('s-family'); renderFamily(); }
+  else if(t==='reports'){ renderReports(); show('s-home'); }
+  else { renderHome(); show('s-home'); }
+}
+
+// ── AUTH ──
+function doLogin(){
+  const n = document.getElementById('login-name').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const db = loadDB();
+  const u = db.users[n];
+  if(!u){ showErr('login-err','User not found. Please create an account first.'); return; }
+  if(u.pass !== p){ showErr('login-err','Incorrect password.'); return; }
+  loginAs(n);
+}
+function doRegister(){
+  const n = document.getElementById('reg-name').value.trim();
+  const p = document.getElementById('reg-pass').value;
+  const r = document.getElementById('reg-role').value;
+  if(!n||!p){ showErr('reg-err','Please fill in all fields.'); return; }
+  const db = loadDB();
+  if(db.users[n]){ showErr('reg-err','That name is already taken. Try a different name.'); return; }
+
+  if(r === 'member'){
+    const raw = document.getElementById('reg-code').value.trim();
+    const inv = parseInviteCode(raw);
+    if(!inv){ showErr('reg-err','Invalid invite code. Make sure you copied the full code from your family admin.'); return; }
+    // Bootstrap family record on this device if not present
+    if(!db.families[inv.familyId]){
+      db.families[inv.familyId] = { name: inv.familyName, admin: inv.adminName, members: [] };
+    }
+    const fam = db.families[inv.familyId];
+    if(!fam.members.includes(n)) fam.members.push(n);
+    db.users[n] = { pass:p, role:'member', family:inv.familyId, color:'#F5F3FF', tc:'#6D28D9' };
+    saveDB(db);
+  } else {
+    // Create new family
+    const famId = 'FAM-' + Math.floor(1000 + Math.random()*9000);
+    db.families[famId] = { name: n+"'s Family", admin:n, members:[n] };
+    db.users[n] = { pass:p, role:'admin', family:famId, color:'#EEF2FF', tc:'#3730A3' };
+    saveDB(db);
+  }
+  loginAs(n);
+}
+function loginAs(name){
+  CU = name;
+  const db = loadDB();
+  const u = db.users[name];
+  const av = document.getElementById('home-av');
+  av.textContent = name[0];
+  av.style.background = u.color || '#EEF2FF';
+  av.style.color = u.tc || '#3730A3';
+  document.getElementById('home-greeting').textContent = 'Hello, ' + name + '!';
+  renderHome();
+  show('s-home');
+}
+function toggleCodeField(){
+  document.getElementById('reg-code-wrap').style.display =
+    document.getElementById('reg-role').value === 'member' ? 'block' : 'none';
+}
+function showErr(id, msg){
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ── HOME ──
+function renderHome(){
+  const db = loadDB();
+  const u = db.users[CU];
+  if(!u){ show('s-landing'); return; }
+  const fam = db.families[u.family];
+  if(!fam){ show('s-landing'); return; }
+  const myC = db.checkins[CU] || [];
+  const today = todayKey();
+  const done = myC.some(c => c.date === today);
+  let h = '';
+  if(!done){
+    h += `<div class="alert info">👋 You haven't checked in today yet.</div>
+    <button class="btn primary" onclick="switchTab('checkin')">Do today's check-in →</button>`;
+  } else {
+    h += `<div class="alert success">✅ Today's check-in complete!</div>`;
+    const c = myC.find(x => x.date === today);
+    h += `<div class="card"><div class="section-title">Your summary today</div>${miniSummary(c)}</div>`;
+  }
+  h += `<div class="card"><div class="section-title">Family status · Today</div>`;
+  fam.members.forEach(m => {
+    const mu = db.users[m] || {};
+    const mc = db.checkins[m] || [];
+    const tc = mc.find(c => c.date === today);
+    h += `<div class="member-row" style="margin-bottom:8px;cursor:pointer" onclick="viewMember('${m}')">
+      <div class="avatar" style="background:${mu.color||'#eee'};color:${mu.tc||'#333'}">${m[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${m}</div>
+        <div style="font-size:12px;color:#888">${tc ? healthStatus(tc) : 'No check-in yet'}</div>
+      </div>
+      <div style="text-align:right">
+        ${tc ? `<div style="font-size:22px">${moodEmoji(tc.mood)}</div>` : '<div style="color:#ccc;font-size:18px">—</div>'}
+        ${tc && tc.sick==='yes' ? `<span class="badge" style="background:#FEF2F2;color:#DC2626;font-size:10px">🤒 Sick</span>` : ''}
+      </div>
+    </div>`;
+  });
+  h += '</div>';
+
+  // Show invite & sync section
+  const invCode = makeInviteCode(u.family, fam.name, fam.admin);
+  const syncBlob = makeSyncBlob(db, u.family);
+
+  if(u.role === 'admin'){
+    h += `<div class="card">
+      <div class="section-title">Step 1 — Invite new members</div>
+      <p style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Share this invite code with anyone you want to add to <strong>${fam.name}</strong>. They paste it when creating their account.</p>
+      <div class="code-box" id="inv-code-box">${invCode}</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="copy-btn" style="flex:1" onclick="copyText('${invCode}','inv-copied')">📋 Copy invite code</button>
+        <span id="inv-copied" style="font-size:12px;color:#166534;align-self:center;display:none">Copied!</span>
+      </div>
+    </div>`;
+    if(syncBlob){
+      h += `<div class="card">
+        <div class="section-title">Step 2 — Share today's health data</div>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">After members check in, share this sync code so everyone can see each other's data. Re-share it whenever new check-ins are added.</p>
+        <div class="code-box" style="font-size:12px;word-break:break-all;letter-spacing:1px">${syncBlob.substring(0,40)}…</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="copy-btn" style="flex:1" onclick="copySyncBlob()">📋 Copy sync code</button>
+          <span id="sync-copied" style="font-size:12px;color:#166534;align-self:center;display:none">Copied!</span>
+        </div>
+      </div>`;
+      // Store full blob for the copy button
+      window._syncBlob = syncBlob;
+    }
+  } else {
+    // Members see a sync import box
+    h += `<div class="card">
+      <div class="section-title">Import family data</div>
+      <p style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Ask your family admin to share the sync code, then paste it here to see everyone's check-ins.</p>
+      <textarea id="sync-import" placeholder="Paste the sync code from your admin here…" style="height:80px;resize:none;font-size:12px;font-family:monospace"></textarea>
+      <div id="sync-err" class="alert danger" style="display:none;margin-top:8px"></div>
+      <div id="sync-ok" class="alert success" style="display:none;margin-top:8px"></div>
+      <button class="btn primary" style="margin-top:8px" onclick="doImportSync()">Import & refresh →</button>
+    </div>`;
+  }
+  document.getElementById('home-scroll').innerHTML = h;
+}
+
+function copySyncBlob(){
+  copyText(window._syncBlob, 'sync-copied');
+}
+function copyText(text, feedbackId){
+  navigator.clipboard.writeText(text).then(()=>{
+    const el = document.getElementById(feedbackId);
+    if(el){ el.style.display='inline'; setTimeout(()=>el.style.display='none', 2000); }
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const el = document.getElementById(feedbackId);
+    if(el){ el.style.display='inline'; setTimeout(()=>el.style.display='none', 2000); }
+  });
+}
+function doImportSync(){
+  const raw = document.getElementById('sync-import').value.trim();
+  if(!raw){ showErr('sync-err','Please paste the sync code first.'); return; }
+  document.getElementById('sync-err').style.display='none';
+  document.getElementById('sync-ok').style.display='none';
+  const db = loadDB();
+  const err = importSyncBlob(raw, db);
+  if(err){ showErr('sync-err', err); return; }
+  const okEl = document.getElementById('sync-ok');
+  okEl.textContent = '✅ Family data imported! Refreshing…'; okEl.style.display='block';
+  setTimeout(()=>{ renderHome(); }, 900);
+}
+
+// ── CHECK-IN ──
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function resetCheckin(){
+  CI = { mood:null, sick:'no', exercise:'no', meds:'no', water:'ok', sleep:'ok', diet:'ok' };
+  document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('mood-label').textContent = 'Tap an emoji';
+  [['sick-toggle',0],['ex-toggle',0],['med-toggle',0],['water-toggle',1],['sleep-toggle',1],['diet-toggle',1]].forEach(([id,idx])=>{
+    const g=document.getElementById(id);
+    if(g) g.querySelectorAll('.toggle-opt').forEach((o,i)=>o.classList.toggle('sel',i===idx));
+  });
+  document.getElementById('symptoms-row').style.display='none';
+  document.getElementById('ex-detail').style.display='none';
+  ['v-sugar','v-bps','v-bpd','v-chol','v-weight','v-hr','v-spo2','ex-mins','ex-steps','checkin-note'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.querySelectorAll('#symptom-chips .chip, #ex-chips .chip').forEach(c=>c.classList.remove('sel'));
+}
+function selectMood(btn){
+  document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  CI.mood = parseInt(btn.dataset.val);
+  const labels = {1:'Very sad 😢',2:'Sad 😔',3:'Okay 😐',4:'Good 🙂',5:'Great 😄'};
+  document.getElementById('mood-label').textContent = labels[CI.mood];
+}
+function toggle(el, gid){
+  document.querySelectorAll('#'+gid+' .toggle-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  const v = el.dataset.val;
+  if(gid==='sick-toggle'){ CI.sick=v; document.getElementById('symptoms-row').style.display=v==='yes'?'block':'none'; }
+  else if(gid==='ex-toggle'){ CI.exercise=v; document.getElementById('ex-detail').style.display=v==='yes'?'block':'none'; }
+  else if(gid==='med-toggle') CI.meds=v;
+  else if(gid==='water-toggle') CI.water=v;
+  else if(gid==='sleep-toggle') CI.sleep=v;
+  else if(gid==='diet-toggle') CI.diet=v;
+}
+function selectEx(el){ document.querySelectorAll('#ex-chips .chip').forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); }
+function submitCheckin(){
+  if(!CI.mood){ alert('Please select how you are feeling first!'); return; }
+  const symptoms = [...document.querySelectorAll('#symptom-chips .chip.sel')].map(c=>c.textContent.trim());
+  const exChip = document.querySelector('#ex-chips .chip.sel');
+  const entry = {
+    date: todayKey(), mood: CI.mood, sick: CI.sick, symptoms,
+    exercise: CI.exercise, exType: exChip ? exChip.textContent.trim().replace(/^\S+\s/,'') : '',
+    exMins: parseInt(document.getElementById('ex-mins').value)||0,
+    steps: parseInt(document.getElementById('ex-steps').value)||0,
+    sugar: parseFloat(document.getElementById('v-sugar').value)||null,
+    bpS: parseInt(document.getElementById('v-bps').value)||null,
+    bpD: parseInt(document.getElementById('v-bpd').value)||null,
+    chol: parseInt(document.getElementById('v-chol').value)||null,
+    weight: parseFloat(document.getElementById('v-weight').value)||null,
+    hr: parseInt(document.getElementById('v-hr').value)||null,
+    spo2: parseInt(document.getElementById('v-spo2').value)||null,
+    meds: CI.meds, water: CI.water, sleep: CI.sleep, diet: CI.diet,
+    note: document.getElementById('checkin-note').value.trim()
+  };
+  const db = loadDB();
+  if(!db.checkins[CU]) db.checkins[CU] = [];
+  db.checkins[CU] = db.checkins[CU].filter(c => c.date !== todayKey());
+  db.checkins[CU].push(entry);
+  saveDB(db);
+  const alerts = getAlerts(entry, 'Your');
+  document.getElementById('done-msg').textContent = entry.sick==='yes'
+    ? 'Your family has been notified you are feeling sick.'
+    : 'Your family can see your update for today.';
+  document.getElementById('health-alerts').innerHTML = alerts.map(a=>`<div class="alert warn">${a}</div>`).join('');
+  show('s-done');
+}
+
+// ── FAMILY ──
+function renderFamily(){
+  const db = loadDB();
+  const u = db.users[CU];
+  const fam = db.families[u.family];
+  if(!fam) return;
+  document.getElementById('fam-title').textContent = fam.name;
+  const today = todayKey();
+  let h = '';
+  const invCode = makeInviteCode(u.family, fam.name, fam.admin);
+  const syncBlob = makeSyncBlob(db, u.family);
+
+  if(u.role === 'admin'){
+    h += `<div class="card">
+      <div class="section-title">Invite new members</div>
+      <p style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Send this code to anyone you want to join <strong>${fam.name}</strong>. They paste it when registering.</p>
+      <div class="code-box">${invCode}</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="copy-btn" onclick="copyText('${invCode}','fam-inv-copied')" style="flex:1">📋 Copy invite code</button>
+        <span id="fam-inv-copied" style="font-size:12px;color:#166534;align-self:center;display:none">Copied!</span>
+      </div>
+    </div>`;
+    if(syncBlob){
+      h += `<div class="card">
+        <div class="section-title">Share check-in data with members</div>
+        <p style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6">Members paste this sync code in their Home tab to see everyone's health updates.</p>
+        <button class="copy-btn" onclick="window._syncBlob2='${syncBlob}';copyText(window._syncBlob2,'fam-sync-copied')" style="width:100%">📋 Copy sync code</button>
+        <span id="fam-sync-copied" style="font-size:12px;color:#166534;display:none;margin-top:6px;display:none">Copied!</span>
+      </div>`;
+      window._syncBlob = syncBlob;
+    }
+  }
+
+  h += `<div class="card"><div class="section-title">Members · ${fam.members.length}</div>`;
+  fam.members.forEach(m => {
+    const mu = db.users[m] || {};
+    const mc = db.checkins[m] || [];
+    const tc = mc.find(c => c.date === today);
+    h += `<div class="member-row" style="margin-bottom:8px;cursor:pointer" onclick="viewMember('${m}')">
+      <div class="avatar" style="background:${mu.color||'#eee'};color:${mu.tc||'#333'}">${m[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${m} ${mu.role==='admin'?'<span style="font-size:10px;color:#aaa">(admin)</span>':''}</div>
+        <div style="font-size:12px;color:#888">${tc ? healthStatus(tc) : 'No check-in today'}</div>
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        ${tc ? `<span style="font-size:22px">${moodEmoji(tc.mood)}</span>` : '<span style="color:#ccc">—</span>'}
+        ${tc && tc.sick==='yes' ? `<span class="badge" style="background:#FEF2F2;color:#DC2626;font-size:10px">Sick</span>` : ''}
+      </div>
+    </div>`;
+  });
+  h += '</div>';
+  document.getElementById('fam-scroll').innerHTML = h;
+}
+
+function viewMember(name){
+  const db = loadDB();
+  const mc = db.checkins[name] || [];
+  const today = todayKey();
+  const tc = mc.find(c => c.date === today);
+  document.getElementById('mem-name').textContent = name + "'s health";
+  let h = '';
+  if(!tc){
+    h = `<div class="alert info">${name} hasn't done today's check-in yet.</div>`;
+  } else {
+    if(tc.sick==='yes') h += `<div class="alert danger">⚠️ ${name} is feeling sick today${tc.symptoms&&tc.symptoms.length?' — '+tc.symptoms.join(', '):''}.</div>`;
+    const alts = getAlerts(tc, name+"'s");
+    if(alts.length) h += alts.map(a=>`<div class="alert warn">⚠️ ${a}</div>`).join('');
+    h += `<div class="card"><div class="section-title">Today's summary</div>${miniSummary(tc)}</div>`;
+    h += `<div class="card"><div class="section-title">Vitals</div>
+      ${vRow('🩸 Blood sugar', tc.sugar, 'mg/dL', sugarStatus(tc.sugar))}
+      ${vRow('🫀 Blood pressure', tc.bpS&&tc.bpD ? tc.bpS+'/'+tc.bpD : null, 'mmHg', bpStatus(tc.bpS,tc.bpD))}
+      ${vRow('🧪 Cholesterol', tc.chol, 'mg/dL', cholStatus(tc.chol))}
+      ${vRow('⚖️ Weight', tc.weight, 'kg', 'info')}
+      ${vRow('❤️ Heart rate', tc.hr, 'bpm', hrStatus(tc.hr))}
+      ${vRow('🩺 SpO2', tc.spo2, '%', spo2Status(tc.spo2))}
+    </div>`;
+    h += `<div class="card"><div class="section-title">Habits</div>
+      ${habRow('💊 Medicines', tc.meds==='yes'?'Taken':tc.meds==='na'?'Not applicable':'Not taken', tc.meds==='yes'?'success':'')}
+      ${habRow('💧 Water', cap(tc.water), tc.water==='good'?'success':tc.water==='low'?'warn':'')}
+      ${habRow('😴 Sleep', cap(tc.sleep), tc.sleep==='good'?'success':tc.sleep==='poor'?'warn':'')}
+      ${habRow('🍽️ Diet', cap(tc.diet), tc.diet==='good'?'success':tc.diet==='poor'?'warn':'')}
+      ${habRow('🏃 Exercise', tc.exercise==='yes'?(tc.exType+(tc.exMins?' · '+tc.exMins+' mins':'')):'No', tc.exercise==='yes'?'success':'')}
+    </div>`;
+    if(tc.note) h += `<div class="card"><div class="section-title">Note</div><p style="font-size:14px;color:#555;line-height:1.65;font-style:italic">"${tc.note}"</p></div>`;
+  }
+  document.getElementById('mem-scroll').innerHTML = h;
+  show('s-member');
+}
+
+// ── REPORTS ──
+function renderReports(){
+  const db = loadDB();
+  const u = db.users[CU];
+  const fam = db.families[u.family];
+  const today = todayKey();
+  let checked=0, sick=0, highBP=0, highSugar=0;
+  fam.members.forEach(m => {
+    const tc = (db.checkins[m]||[]).find(c=>c.date===today);
+    if(tc){ checked++; if(tc.sick==='yes')sick++; if(tc.bpS>139)highBP++; if(tc.sugar>140)highSugar++; }
+  });
+  let h = `<div style="font-size:15px;font-weight:600;margin-bottom:4px">Family health report</div>
+  <div style="font-size:13px;color:#888;margin-bottom:10px">Today · ${today}</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px">
+    <div class="metric-card"><div class="metric-val">${checked}/${fam.members.length}</div><div class="metric-lbl">Checked in</div></div>
+    <div class="metric-card"><div class="metric-val" style="${sick?'color:#DC2626':''}">${sick}</div><div class="metric-lbl">Sick</div></div>
+    <div class="metric-card"><div class="metric-val" style="${highBP?'color:#D97706':''}">${highBP}</div><div class="metric-lbl">High BP</div></div>
+    <div class="metric-card"><div class="metric-val" style="${highSugar?'color:#D97706':''}">${highSugar}</div><div class="metric-lbl">High sugar</div></div>
+  </div>`;
+  fam.members.forEach(m => {
+    const mu = db.users[m]||{};
+    const tc = (db.checkins[m]||[]).find(c=>c.date===today);
+    h += `<div class="card" style="cursor:pointer" onclick="viewMember('${m}')">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="avatar" style="background:${mu.color||'#eee'};color:${mu.tc||'#333'}">${m[0]}</div>
+        <div style="font-weight:500">${m}</div>
+        ${tc ? `<span style="font-size:22px;margin-left:auto">${moodEmoji(tc.mood)}</span>` : '<span style="color:#ccc;margin-left:auto;font-size:13px">No data</span>'}
+      </div>
+      ${tc ? miniSummary(tc) : '<p style="font-size:13px;color:#aaa;text-align:center;padding:6px 0">No check-in today</p>'}
+    </div>`;
+  });
+  document.getElementById('home-scroll').innerHTML = h;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===3));
+}
+
+// ── HELPERS ──
+function miniSummary(c){
+  return `<div class="metric-grid">
+    <div class="metric-card"><div class="metric-val">${moodEmoji(c.mood)}</div><div class="metric-lbl">Mood</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:14px">${c.sugar||'—'}</div><div class="metric-lbl">Sugar</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:13px">${c.bpS&&c.bpD?c.bpS+'/'+c.bpD:'—'}</div><div class="metric-lbl">BP</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:14px">${c.chol||'—'}</div><div class="metric-lbl">Cholesterol</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:13px">${c.exercise==='yes'?'Yes':'No'}</div><div class="metric-lbl">Exercise</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:13px">${cap(c.sleep)}</div><div class="metric-lbl">Sleep</div></div>
+  </div>
+  ${c.note?`<p style="font-size:12px;color:#888;margin-top:10px;padding:8px 12px;background:#FAFAF8;border-radius:8px;line-height:1.5;font-style:italic">"${c.note}"</p>`:''}`;
+}
+function vRow(label, val, unit, status){
+  const colors = { success:{bg:'#F0FDF4',tc:'#166534',lbl:'Normal'}, warn:{bg:'#FFFBEB',tc:'#92400E',lbl:'Borderline'}, danger:{bg:'#FEF2F2',tc:'#991B1B',lbl:'High'}, info:{bg:'#EFF6FF',tc:'#1E40AF',lbl:'Logged'} };
+  const c = colors[status] || colors.info;
+  return `<div class="vital-row">
+    <span style="font-size:13px;color:#444">${label}</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:14px;font-weight:500">${val||'—'} <span style="font-size:11px;font-weight:400;color:#888">${val?unit:''}</span></span>
+      ${val?`<span class="badge" style="background:${c.bg};color:${c.tc};font-size:10px">${c.lbl}</span>`:''}
+    </div>
+  </div>`;
+}
+function habRow(label, val, status){
+  const colors = { success:'#166534', warn:'#92400E' };
+  return `<div class="vital-row">
+    <span style="font-size:13px;color:#444">${label}</span>
+    <span style="font-size:13px;font-weight:500;color:${colors[status]||'#1a1a1a'}">${val}</span>
+  </div>`;
+}
+function moodEmoji(v){ return ['','😢','😔','😐','🙂','😄'][v]||'—'; }
+function cap(s){ return s ? s[0].toUpperCase()+s.slice(1) : s; }
+function healthStatus(c){
+  const iss = [];
+  if(c.sugar>140) iss.push('High sugar');
+  if(c.bpS>139||c.bpD>89) iss.push('High BP');
+  if(c.chol>239) iss.push('High cholesterol');
+  if(c.sick==='yes') iss.push('Sick');
+  return iss.length ? '⚠ '+iss.join(' · ') : 'All looks good';
+}
+function getAlerts(c, who){
+  const a = [];
+  if(c.sugar>180) a.push(who+' blood sugar is very high ('+c.sugar+' mg/dL). Please consult a doctor.');
+  else if(c.sugar>140) a.push(who+' blood sugar is elevated ('+c.sugar+' mg/dL). Normal fasting is below 100.');
+  if(c.bpS>160||c.bpD>100) a.push(who+' blood pressure is very high ('+c.bpS+'/'+c.bpD+' mmHg). Seek medical advice.');
+  else if(c.bpS>139||c.bpD>89) a.push(who+' blood pressure is elevated ('+c.bpS+'/'+c.bpD+' mmHg). Normal is below 120/80.');
+  if(c.chol>240) a.push(who+' cholesterol is high ('+c.chol+' mg/dL). Desirable is below 200.');
+  if(c.spo2&&c.spo2<95) a.push(who+' oxygen level is low ('+c.spo2+'%). Normal is 95–100%.');
+  if(c.hr&&(c.hr<50||c.hr>100)) a.push(who+' heart rate is outside normal range ('+c.hr+' bpm). Normal resting: 60–100.');
+  return a;
+}
+function sugarStatus(v){ if(!v) return 'info'; if(v>180) return 'danger'; if(v>100) return 'warn'; return 'success'; }
+function bpStatus(s,d){ if(!s) return 'info'; if(s>159||d>99) return 'danger'; if(s>129||d>79) return 'warn'; return 'success'; }
+function cholStatus(v){ if(!v) return 'info'; if(v>240) return 'danger'; if(v>200) return 'warn'; return 'success'; }
+function hrStatus(v){ if(!v) return 'info'; if(v<50||v>110) return 'danger'; if(v>100) return 'warn'; return 'success'; }
+function spo2Status(v){ if(!v) return 'info'; if(v<90) return 'danger'; if(v<95) return 'warn'; return 'success'; }
+</script>
+</body>
+</html>
